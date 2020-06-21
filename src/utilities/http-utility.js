@@ -42,8 +42,9 @@ export const toAbsoluteUrl = (relative, baseUrl = null) => {
   return stack.join("/");
 };
 
-export const toQueryString = obj => {
+export const toQueryString = (obj, includeNulls = false) => {
   return Object.entries(obj)
+    .filter(e => includeNulls || e[1] != null)
     .map(
       entry => `${encodeURIComponent(entry[0])}=${encodeURIComponent(entry[1])}`
     )

@@ -1,30 +1,74 @@
 import EventHandler from "../events/event-handler";
 
 class EntityManager {
-  constructor(service) {
+  constructor(service, { enableCount = true, defaults = { searchObject: { pageSize: 20 } } } = {}) {
+    this._defaults = {
+      ...defaults
+    };
     this._service = service;
     this.state = {
       details: undefined,
-      items: undefined
+      items: undefined,
+      count: undefined,
+      searchObject: this._defaults.searchObject
     };
+    this.reset();
+    this._enableCount = !!enableCount;
   }
 
   async details(id) {
     const original = this.state.details;
-    const item = await this._service.details(id);
+    const args = [id].concat([...arguments].slice(1));
+    const item = await this._service.details.apply(this._service, args);
     this.setDetails(item);
     await this.trigger("change-details", { original, item });
     return this.state.details;
   }
-  async list(so = {}) {
+  // deprecated -> use search instead
+  async list(searchObject = {}) {
     const original = this.state.items;
-    const items = await this._service.list(so);
+    this.setSearchObject(searchObject);
+    const args = [this.state.searchObject].concat([...arguments].slice(1));
+    const items = await this._service.list.apply(this._service, args);
     this.setItems(items);
     await this.trigger("change-items", { original, items });
     return this.state.items;
   }
+  // deprecated -> use search instead
+  async count(searchObject = {}) {
+    const original = this.state.count;
+    this.setSearchObject(searchObject);
+    const args = [this.state.searchObject].concat([...arguments].slice(1));
+    const count = await this._service.count.apply(this._service, args);
+    this.setCount(count);
+    await this.trigger("change-count", { original, count });
+    return this.state.count;
+  }
+  async search(searchObject = this.state.searchObject) {
+    const original = {
+      searchObject: this.state.searchObject,
+      items: this.state.items,
+      count: this.state.count
+    };
+    console.debug("Entity.Searching", { mgr: this, state: this.state, original, so: { ...searchObject } });
+    this.setSearchObject(searchObject);
+    const args = [this.state.searchObject].concat([...arguments].slice(1));
+    let count = undefined;
+    if (this._enableCount) {
+      count = await this._service.count.apply(this._service, args);
+      this.setCount(count);
+    }
+    const items = !this._enableCount || count > 0
+      ? await this._service.list.apply(this._service, args)
+      : [];
+    this.setItems(items);
+    const state = { searchObject, items, count };
+    await this.trigger("search", { original, state });
+    return state;
+  }
   async save(item = this.state.details) {
-    const saved = await this._service.save(item);
+    const args = [item].concat([...arguments].slice(1));
+    const saved = await this._service.save.apply(this._service, args);
     this.setDetails(saved);
     if (this.state.items != null) {
       const newItems = [...this.state.items];
@@ -40,7 +84,8 @@ class EntityManager {
     return saved;
   }
   async delete(item = this.state.details) {
-    await this._service.delete(item);
+    const args = [item].concat([...arguments].slice(1));
+    await this._service.delete.apply(this._service, args);
     if (this.state.items != null) {
       const newItems = this.state.items.filter(x => x.id !== item.id);
       this.setItems(newItems);
@@ -62,10 +107,18 @@ class EntityManager {
   setItems(items) {
     this.state.items = items;
   }
+  setCount(count) {
+    this.state.count = count;
+  }
+  setSearchObject(searchObject = {}) {
+    this.state.searchObject = searchObject;
+  }
 
   reset() {
     this.state.items = undefined;
     this.state.details = undefined;
+    this.state.count = undefined;
+    this.state.searchObject = {};
   }
 }
 EventHandler.injectInto(EntityManager.prototype);
