@@ -8,11 +8,11 @@ export const equals = (s1, s2, ignoreCase) => {
   }
   return s1 === s2;
 };
-export const contains = (s1, searchString, ignoreCase) => {
+export const contains = (s, searchString, ignoreCase) => {
   if (ignoreCase) {
-    return s1.toLowerCase().indexOf(searchString.toLowerCase()) !== -1;
+    return s.toLowerCase().indexOf(searchString.toLowerCase()) !== -1;
   }
-  return s1.indexOf(searchString) !== -1;
+  return s.indexOf(searchString) !== -1;
 };
 export const startsWith = (s, searchString, ignoreCase) => {
   if (ignoreCase) {
@@ -95,7 +95,7 @@ export const isEmail = email => {
 };
 export const isUrl = url => {
   // https://www.regextester.com/94502
-  return /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/gi.test(
+  return /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w.-]+)+[\w\-._~:/?#[\]@!$&'()*+,;=.]+$/gi.test(
     url
   );
 };
@@ -376,12 +376,12 @@ export const toKebabCase = s =>
   !s
     ? ""
     : trim(
-        s
-          .replace(/[^\w ]+/g, " ")
-          .replace(/\s+/g, "-")
-          .toLowerCase(),
-        "-"
-      );
+      s
+        .replace(/[^\w ]+/g, " ")
+        .replace(/\s+/g, "-")
+        .toLowerCase(),
+      "-"
+    );
 // e.g. this_is_snake_case
 export const toSnakeCase = s => (!s ? "" : toKebabCase(s).replace(/-+/g, "_"));
 // e.g. This-Is-Train-Case
@@ -392,10 +392,10 @@ export const toCamelCase = s =>
   !s
     ? ""
     : toKebabCase(s)
-        .replace(/-/g, " ")
-        .replace(/\s(.)/g, m => m.toUpperCase())
-        .replace(/\s/g, "")
-        .replace(/^(.)/, m => m.toLowerCase());
+      .replace(/-/g, " ")
+      .replace(/\s(.)/g, m => m.toUpperCase())
+      .replace(/\s/g, "")
+      .replace(/^(.)/, m => m.toLowerCase());
 // e.g. ThisIsPascalCase
 export const toPascalCase = s => (!s ? "" : capitalize(toCamelCase(s)));
 

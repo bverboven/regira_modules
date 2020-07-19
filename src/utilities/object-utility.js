@@ -8,7 +8,7 @@ export const flattenObject = obj => {
     const flattenProperties = (obj, prefix = '', result = {}) => {
 
         if (Array.isArray(obj)) {
-            for (let i = 0; i < value.length; i++) {
+            for (let i = 0; i < obj.length; i++) {
                 flattenProperties(obj, `${prefix}[${i}]`, result);
             }
         } else if (typeof (obj) !== 'object') {
@@ -18,8 +18,8 @@ export const flattenObject = obj => {
                 const name = entry[0];
                 const value = entry[1];
                 if (Array.isArray(value)) {
-                    const arrKey = getKey(`${name}[${i}]`, prefix);
                     for (let i in value) {
+                        const arrKey = getKey(`${name}[${i}]`, prefix);
                         flattenProperties(value[i], arrKey, result);
                     }
                 } else {

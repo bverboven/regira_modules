@@ -81,7 +81,7 @@ export const base64ToBlob = (base64, filename, type) => {
 
   return byteStringToBlob(byteString, filename, type);
 };
-export const urlToBlob = async (url, filename, type) => {
+export const urlToBlob = async (url, filename/*, type*/) => {
   const blob = await fetch(url).then(r => r.blob());
   if (filename) {
     blob.name = filename;

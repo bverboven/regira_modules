@@ -1,7 +1,7 @@
 import EventHandler from "../events/event-handler";
 
 class EntityManager {
-  constructor(service, { enableCount = true, defaults = { searchObject: { pageSize: 20 } } } = {}) {
+  constructor(service, { enableCount = true, defaults = { searchObject: {} } } = {}) {
     this._defaults = {
       ...defaults
     };
@@ -50,7 +50,6 @@ class EntityManager {
       items: this.state.items,
       count: this.state.count
     };
-    console.debug("Entity.Searching", { mgr: this, state: this.state, original, so: { ...searchObject } });
     this.setSearchObject(searchObject);
     const args = [this.state.searchObject].concat([...arguments].slice(1));
     let count = undefined;
@@ -66,13 +65,16 @@ class EntityManager {
     await this.trigger("search", { original, state });
     return state;
   }
-  async save(item = this.state.details) {
-    const args = [item].concat([...arguments].slice(1));
+  async save(item = null) {
+    const itemToSave = item || this.state.details;
+    const args = [itemToSave].concat([...arguments].slice(1));
     const saved = await this._service.save.apply(this._service, args);
-    this.setDetails(saved);
+    if (!item || item === this.state.details) {
+      this.setDetails(saved);
+    }
     if (this.state.items != null) {
       const newItems = [...this.state.items];
-      const itemIndex = newItems.findIndex(x => x.id === item.id);
+      const itemIndex = newItems.findIndex(x => x.id === itemToSave.id);
       if (itemIndex !== -1) {
         newItems.splice(itemIndex, 1, saved);
       } else {
@@ -80,21 +82,22 @@ class EntityManager {
       }
       this.setItems(newItems);
     }
-    await this.trigger("save-item", { original: item, saved });
+    await this.trigger("save-item", { original: itemToSave, saved });
     return saved;
   }
-  async delete(item = this.state.details) {
-    const args = [item].concat([...arguments].slice(1));
+  async delete(item = null) {
+    const itemToDelete = item || this.state.details;
+    const args = [itemToDelete].concat([...arguments].slice(1));
     await this._service.delete.apply(this._service, args);
     if (this.state.items != null) {
-      const newItems = this.state.items.filter(x => x.id !== item.id);
+      const newItems = this.state.items.filter(x => x.id !== itemToDelete.id);
       this.setItems(newItems);
     }
-    if (this.state.details && this.state.details.id === item.id) {
-      this.setDetails(null);
-    }
-    await this.trigger("delete-item", { item });
-    return item;
+    // if (this.state.details && this.state.details.id === itemToDelete.id) {
+    //   this.setDetails(null);
+    // }
+    await this.trigger("delete-item", { item: itemToDelete });
+    return itemToDelete;
   }
 
   async newItem() {

@@ -45,8 +45,13 @@ class EntityService {
   }
   async delete(item) {
     const url = this.getDeleteUrl(item);
-    const response = await axios.delete(url);
-    this.checkResponse(response);
+    try {
+      const response = await axios.delete(url);
+      this.checkResponse(response);
+    }
+    catch (ex) {
+      this.throwRemoteError("Deleting failed", ex);
+    }
     return item;
   }
 
@@ -71,7 +76,7 @@ class EntityService {
     return this.saveUrl.replace("{id}", item.id || '');
   }
   getDeleteUrl(item) {
-    return this.getDeleteUrl.replace("{id}", item.id);
+    return this.deleteUrl.replace("{id}", item.id);
   }
 
   checkResponse(response) {
@@ -85,6 +90,9 @@ class EntityService {
     const error = Error(msg);
     if (ex.response) {
       error.data = ex.response.data;
+      if ("errors" in error.data) {
+        error.errors = ex.response.data.errors;
+      }
       error.status = ex.response.status;
       error.statusText = ex.response.statusText;
     }
