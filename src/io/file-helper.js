@@ -33,9 +33,13 @@ class FileHelper {
     throw Error("Cannot convert input to type Blob");
   }
 
+  async getBase64Url(input){
+    const blob = await this.getBlob(input);
+    return fileUtility.getBase64Url(blob);
+  }
   async createUrl(input) {
     const blob = await this.getBlob(input);
-    return fileUtility.createUrl(blob);
+    return fileUtility.blobToBase64(blob);
   }
   async browse(options = {}) {
     return new Promise(function (resolve) {
