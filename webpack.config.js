@@ -16,9 +16,11 @@ const copyPackageJson = () => ({
         // new CleanWebpackPlugin({
         //     verbose: true
         // }),
-        new CopyPlugin([
-            { from: './package.json', to: 'package.json' }
-        ]),
+        new CopyPlugin({
+            patterns: [
+                { from: './package.json', to: 'package.json' }
+            ]
+        }),
         new htmlWebpackPlugin({
             filename: 'index.html'
         })
