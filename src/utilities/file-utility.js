@@ -13,6 +13,26 @@ function byteStringToBlob(byteString, filename, type) {
   blob.name = filename;
   return blob;
 }
+function base64StringToBlob(byteString, type, sliceSize = 512) {
+  // https://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript#answer-16245768
+
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteString.length; offset += sliceSize) {
+    const slice = byteString.slice(offset, offset + sliceSize);
+
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  const blob = new Blob(byteArrays, { type });
+  return blob;
+}
 
 export const isFile = item => item != null && item instanceof Blob;
 export const createUrl = blob => URL.createObjectURL(blob);
@@ -37,7 +57,7 @@ export const getFilenameWithoutExtension = uri => {
   const filenameSegments = filename.split(".");
   return take(filenameSegments, filenameSegments.length - 1 || 1).join(".");
 };
-export const toFormData = (files, data, { filesParameterName = "files" }={}) => {
+export const toFormData = (files, data, { filesParameterName = "files" } = {}) => {
   var flattenedData = flattenObject(data);
   const formData = toArray(files).reduce((r, f) => {
     r.append(filesParameterName, f, f.name);
@@ -64,6 +84,22 @@ export const fileToBlob = async (file, filename, type) => {
   });
 };
 export const base64ToBlob = (base64, filename, type) => {
+
+  const hasType = base64.substr(0, 100).includes(',');
+  const input = hasType
+    ? base64.substr(base64.indexOf(',') + 1)
+    : base64;
+
+  if (!type && hasType) {
+    type = base64.substr(0, base64.indexOf(',')).split(":")[1].split(";")[0];
+  }
+
+  const decodedInput = atob(input);
+
+  const blob = base64StringToBlob(decodedInput, type);
+  blob.name = filename;
+  return blob;
+
   // https://stackoverflow.com/questions/12168909/blob-from-dataurl/36183379#answer-12300351
   let byteString = null;
 
