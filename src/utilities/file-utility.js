@@ -34,25 +34,25 @@ function base64StringToBlob(byteString, type, sliceSize = 512) {
   return blob;
 }
 
-export const isFile = item => item != null && item instanceof Blob;
-export const createUrl = blob => URL.createObjectURL(blob);
-export const revokeUrl = url => URL.revokeObjectURL(url);
-export const getFilename = uri => {
+export const isFile = (item) => item != null && item instanceof Blob;
+export const createUrl = (blob) => URL.createObjectURL(blob);
+export const revokeUrl = (url) => URL.revokeObjectURL(url);
+export const getFilename = (uri) => {
   if (!uri || !uri.includes("/")) {
     return uri;
   }
   if (uri.endsWith("/")) {
     throw new Error("filename cannot end with a '/'");
   }
-  return last(uri.split("/").filter(x => x));
+  return last(uri.split("/").filter((x) => x));
 };
-export const getExtension = filename => {
+export const getExtension = (filename) => {
   const filenameSegments = filename.split(".");
   const filenameSegmentsWithoutFirst = skip(filenameSegments, 1);
   const ext = last(filenameSegmentsWithoutFirst);
   return ext ? "." + ext : "";
 };
-export const getFilenameWithoutExtension = uri => {
+export const getFilenameWithoutExtension = (uri) => {
   const filename = getFilename(uri);
   const filenameSegments = filename.split(".");
   return take(filenameSegments, filenameSegments.length - 1 || 1).join(".");
@@ -70,28 +70,18 @@ export const toFormData = (files, data, { filesParameterName = "files" } = {}) =
 };
 
 export const fileToBlob = async (file, filename, type) => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = () =>
-      resolve(
-        byteStringToBlob(
-          reader.result,
-          filename || file.name,
-          type || file.type
-        )
-      );
+    reader.onload = () => resolve(byteStringToBlob(reader.result, filename || file.name, type || file.type));
     reader.readAsBinaryString(file);
   });
 };
 export const base64ToBlob = (base64, filename, type) => {
-
-  const hasType = base64.substr(0, 100).includes(',');
-  const input = hasType
-    ? base64.substr(base64.indexOf(',') + 1)
-    : base64;
+  const hasType = base64.substr(0, 100).includes(",");
+  const input = hasType ? base64.substr(base64.indexOf(",") + 1) : base64;
 
   if (!type && hasType) {
-    type = base64.substr(0, base64.indexOf(',')).split(":")[1].split(";")[0];
+    type = base64.substr(0, base64.indexOf(",")).split(":")[1].split(";")[0];
   }
 
   const decodedInput = atob(input);
@@ -101,44 +91,54 @@ export const base64ToBlob = (base64, filename, type) => {
   return blob;
 
   // https://stackoverflow.com/questions/12168909/blob-from-dataurl/36183379#answer-12300351
-  let byteString = null;
+  // let byteString = null;
 
-  if (base64.startsWith("data:")) {
-    // convert base64 to raw binary data held in a string
-    // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
-    const segments = base64.split(",");
-    byteString = atob(last(segments));
-    if (!type) {
-      type = segments[0].split(":")[1].split(";")[0];
+  // if (base64.startsWith("data:")) {
+  //   // convert base64 to raw binary data held in a string
+  //   // doesn't handle URLEncoded DataURIs - see SO answer #6850276 for code that does this
+  //   const segments = base64.split(",");
+  //   byteString = atob(last(segments));
+  //   if (!type) {
+  //     type = segments[0].split(":")[1].split(";")[0];
+  //   }
+  // } else {
+  //   byteString = base64;
+  // }
+
+  // return byteStringToBlob(byteString, filename, type);
+};
+export const urlToBlob = async (url, filename) => {
+  const response = await fetch(url);
+
+  // try to get filename from content-disposition header
+  const disposition = response.headers.get("content-disposition");
+  if (disposition && disposition.indexOf("attachment") !== -1) {
+    var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+    var matches = filenameRegex.exec(disposition);
+    if (matches != null && matches[1]) {
+      filename = matches[1].replace(/['"]/g, "");
     }
-  } else {
-    byteString = base64;
   }
 
-  return byteStringToBlob(byteString, filename, type);
-};
-export const urlToBlob = async (url, filename/*, type*/) => {
-  const blob = await fetch(url).then(r => r.blob());
+  const blob = await response.blob();
+
   if (filename) {
     blob.name = filename;
   }
-  // if (type) {
-  //   blob.type = type;
-  // }
   return blob;
 };
-export const blobToBase64 = async blob => {
+export const blobToBase64 = async (blob) => {
   return new Promise(function (resolve) {
     const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
+    reader.onload = (e) => resolve(e.target.result);
     reader.readAsDataURL(blob);
   });
 };
 
-export const readAllText = async blob => {
+export const readAllText = async (blob) => {
   return new Promise(function (resolve) {
     const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
+    reader.onload = (e) => resolve(e.target.result);
     reader.readAsText(blob);
   });
 };
@@ -154,11 +154,7 @@ export const saveAs = (blob, filename) => {
   // http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js
   const saveAs = (function (e) {
     "use strict";
-    if (
-      e == null ||
-      (typeof navigator !== "undefined" &&
-        /MSIE [1-9]\./.test(navigator.userAgent))
-    ) {
+    if (e == null || (typeof navigator !== "undefined" && /MSIE [1-9]\./.test(navigator.userAgent))) {
       return null;
     }
     var t = e.document,
@@ -205,11 +201,7 @@ export const saveAs = (blob, filename) => {
         }
       },
       p = function (e) {
-        if (
-          /^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(
-            e.type
-          )
-        ) {
+        if (/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type)) {
           return new Blob([String.fromCharCode(65279), e], { type: e.type });
         }
         return e;
@@ -229,9 +221,7 @@ export const saveAs = (blob, filename) => {
             if ((f || (m && i)) && e.FileReader) {
               var r = new FileReader();
               r.onloadend = function () {
-                var t2 = f
-                  ? r.result
-                  : r.result.replace(/^data:[^;]*;/, "data:attachment/file;");
+                var t2 = f ? r.result : r.result.replace(/^data:[^;]*;/, "data:attachment/file;");
                 var n = e.open(t2, "_blank");
                 if (!n) e.location.href = t2;
                 v.readyState = v.DONE;
@@ -284,17 +274,13 @@ export const saveAs = (blob, filename) => {
         return navigator.msSaveOrOpenBlob(e, t);
       };
     }
-    w.abort = function () { };
+    w.abort = function () {};
     w.readyState = w.INIT = 0;
     w.WRITING = 1;
     w.DONE = 2;
     w.error = w.onwritestart = w.onprogress = w.onwrite = w.onabort = w.onerror = w.onwriteend = null;
     return m;
-  })(
-    (typeof self !== "undefined" && self) ||
-    (typeof window !== "undefined" && window) ||
-    this.content
-  );
+  })((typeof self !== "undefined" && self) || (typeof window !== "undefined" && window) || this.content);
   return saveAs(blob, filename || blob.name || "file");
 };
 
@@ -316,5 +302,5 @@ export default {
   readAllText,
   writeAllText,
 
-  saveAs
+  saveAs,
 };

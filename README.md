@@ -3,7 +3,7 @@ BBV's modules
 ```
 Create junction to regira_modules:
 
-mklink /J regira_modules C:\_projects\Regira\Regira_Modules\src
+mklink /J regira_modules D:\Projects\Regira\Regira_Modules\src
 
 
 link to github in package.json: 
