@@ -1,1 +1,0 @@
-export { detectIE } from './ie';

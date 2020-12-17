@@ -1,15 +1,16 @@
 import { redirect as htmlRedirect } from "./html-utility";
+import { trim } from "./string-utility";
 
 export const isLocalHost = () => {
   return location.hostname === "localhost" || location.hostname === "127.0.0.1";
 };
 
-export const isHttps = url => {
+export const isHttps = (url) => {
   const currentUrl = typeof url === "string" ? new URL(url) : url;
   return currentUrl.protocol === "https:";
 };
 
-export const getHttpsUrl = url => {
+export const getHttpsUrl = (url) => {
   const currentUrl = new URL(url);
   if (!isHttps(currentUrl)) {
     return "https:" + url.substring(currentUrl.protocol.length);
@@ -17,7 +18,7 @@ export const getHttpsUrl = url => {
   return url;
 };
 
-export const forceHttps = currentUrl => {
+export const forceHttps = (currentUrl) => {
   const httpsUrl = getHttpsUrl(currentUrl);
   if (httpsUrl !== currentUrl && !isLocalHost()) {
     htmlRedirect(httpsUrl);
@@ -29,7 +30,7 @@ export const toAbsoluteUrl = (relative, baseUrl = null) => {
     baseUrl = window.location.origin;
   }
   const stack = baseUrl.split("/");
-  const parts = relative.split("/");
+  const parts = trim(relative, "/").split("/");
   for (let i = 0; i < parts.length; i++) {
     if (parts[i] !== ".") {
       if (parts[i] === "..") {
@@ -43,12 +44,20 @@ export const toAbsoluteUrl = (relative, baseUrl = null) => {
 };
 
 export const toQueryString = (obj, includeNulls = false) => {
-  return Object.entries(obj)
-    .filter(e => includeNulls || e[1] != null)
-    .map(
-      entry => `${encodeURIComponent(entry[0])}=${encodeURIComponent(entry[1])}`
-    )
-    .join("&");
+  const getUriComponent = (key, value) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  const serialize = (obj, prefix) => {
+    return Object.entries(obj)
+      .filter((e) => includeNulls || e[1] != null)
+      .flatMap(([key, value]) => {
+        key = prefix ? `${prefix}[${key}]` : key;
+        return Array.isArray(value)
+          ? value.map((v) => getUriComponent(key, v)) // array
+          : typeof v === "object"
+          ? serialize(value, key) // object
+          : getUriComponent(key, value); // normal key-value
+      });
+  };
+  return serialize(obj).join("&");
 };
 
 // utility
@@ -56,5 +65,5 @@ export default {
   isLocalHost,
   getHttpsUrl,
   forceHttps,
-  toQueryString
+  toQueryString,
 };
