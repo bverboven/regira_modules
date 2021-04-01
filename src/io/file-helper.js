@@ -33,7 +33,7 @@ class FileHelper {
     throw Error("Cannot convert input to type Blob");
   }
 
-  async getBase64Url(input){
+  async getBase64Url(input) {
     const blob = await this.getBlob(input);
     return fileUtility.getBase64Url(blob);
   }
@@ -42,7 +42,7 @@ class FileHelper {
     return fileUtility.blobToBase64(blob);
   }
   async browse(options = {}) {
-    return new Promise(function (resolve) {
+    return new Promise(function(resolve) {
       const input = document.createElement("INPUT");
       input.setAttribute("type", "file");
 
@@ -50,12 +50,7 @@ class FileHelper {
         input.setAttribute("multiple", "true");
       }
       if (options.accept) {
-        input.setAttribute(
-          "accept",
-          Array.isArray(options.accept)
-            ? options.accept.join(",")
-            : options.accept
-        );
+        input.setAttribute("accept", Array.isArray(options.accept) ? options.accept.join(",") : options.accept);
       }
 
       input.value = "";
@@ -79,7 +74,7 @@ class FileHelper {
       console.error("Could not parse blob to JSON", {
         blob,
         content,
-        error: ex
+        error: ex,
       });
       throw ex;
     }
@@ -89,22 +84,24 @@ class FileHelper {
     const blob = fileUtility.writeAllText(json, filename, "application/json");
     return blob;
   }
-  async send(url, files, data = {}, options) {
-    const formData = fileUtility.toFormData(files, data, options);
+  async send(url, files, data = {}, options = {}) {
+    const formData = fileUtility.toFormData(files || [], data || {}, options || {});
+    const { method = "POST" } = options;
+
+    const headers = {
+      "Content-Type": "multipart/form-data",
+      ...(options.headers || {}),
+    };
 
     return axios({
-      method: "post",
+      method: method,
       url,
       data: formData,
-      config: { headers: { "Content-Type": "multipart/form-data" } }
+      headers,
     });
   }
   async saveAs(input, type, filename = null) {
-    const blob = await this.getBlob(
-      input,
-      filename || input.name,
-      type || input.type
-    );
+    const blob = await this.getBlob(input, filename || input.name, type || input.type);
     return fileUtility.saveAs(blob, blob.name || "file");
   }
 }

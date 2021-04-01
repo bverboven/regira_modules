@@ -8,7 +8,7 @@ class TreeList {
   constructor(values = [], o = { fkSelector: null, parentsSelector: null, valueSelector: selfSelector }) {
     this._fkSelector = o.fkSelector;
     this._parentsSelector = o.parentsSelector;
-    this._valueSelector = o.valueSelector;
+    this._valueSelector = o.valueSelector || selfSelector;
 
     this._roots = new Set();
     this._nodes = new Set();

@@ -45,18 +45,18 @@ export const innerJoin = (items1, items2, selector1 = selfSelector, selector2 = 
   return result;
 };
 export const groupBy = (items, keySelector) => {
-  return [
-    ...toMap(items, keySelector, (v, i, map) => {
-      const key = keySelector(v);
-      if (!map.has(key)) {
-        return [v];
-      }
-      const currentValue = map.get(key);
-      return currentValue.concat(v);
-    }),
-  ];
-  // const keys = distinct(arr.map(keySelector));
-  // return keys.map(key => [key, arr.filter((y, j, arr2) => key === keySelector(y, j, arr2))]);
+  // return [
+  //   ...toMap(items, keySelector, (v, i, map) => {
+  //     const key = keySelector(v);
+  //     if (!map.has(key)) {
+  //       return [v];
+  //     }
+  //     const currentValue = map.get(key);
+  //     return currentValue.concat(v);
+  //   }),
+  // ];
+  const keys = distinct(items.map(keySelector));
+  return keys.map((key) => [key, items.filter((y, j, arr2) => key === keySelector(y, j, arr2))]);
 };
 export const groupJoin = (
   parentItems,

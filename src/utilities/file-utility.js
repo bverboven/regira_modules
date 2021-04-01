@@ -34,6 +34,32 @@ function base64StringToBlob(byteString, type, sliceSize = 512) {
   return blob;
 }
 
+export const browse = ({ multiple, accept } = {}) => {
+  return new Promise(function(resolve) {
+    const input = document.createElement("INPUT");
+    input.setAttribute("type", "file");
+
+    if (multiple == null || multiple) {
+      input.setAttribute("multiple", "true");
+    }
+    if (accept != null) {
+      input.setAttribute("accept", Array.isArray(accept) ? accept.join(",") : accept);
+    }
+
+    input.value = "";
+    input.setAttribute("style", "display: none;");
+    function changeListener() {
+      const files = [...this.files];
+      input.removeEventListener("change", changeListener);
+      document.body.removeChild(input);
+      resolve(files);
+    }
+    input.addEventListener("change", changeListener);
+    document.body.appendChild(input);
+    input.click();
+  });
+};
+
 export const isFile = (item) => item != null && item instanceof Blob;
 export const createUrl = (blob) => URL.createObjectURL(blob);
 export const revokeUrl = (url) => URL.revokeObjectURL(url);
@@ -81,7 +107,10 @@ export const base64ToBlob = (base64, filename, type) => {
   const input = hasType ? base64.substr(base64.indexOf(",") + 1) : base64;
 
   if (!type && hasType) {
-    type = base64.substr(0, base64.indexOf(",")).split(":")[1].split(";")[0];
+    type = base64
+      .substr(0, base64.indexOf(","))
+      .split(":")[1]
+      .split(";")[0];
   }
 
   const decodedInput = atob(input);
@@ -128,7 +157,7 @@ export const urlToBlob = async (url, filename) => {
   return blob;
 };
 export const blobToBase64 = async (blob) => {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     const reader = new FileReader();
     reader.onload = (e) => resolve(e.target.result);
     reader.readAsDataURL(blob);
@@ -136,7 +165,7 @@ export const blobToBase64 = async (blob) => {
 };
 
 export const readAllText = async (blob) => {
-  return new Promise(function (resolve) {
+  return new Promise(function(resolve) {
     const reader = new FileReader();
     reader.onload = (e) => resolve(e.target.result);
     reader.readAsText(blob);
@@ -152,32 +181,32 @@ export const writeAllText = (content, filename, type) => {
 
 export const saveAs = (blob, filename) => {
   // http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js
-  const saveAs = (function (e) {
+  const saveAs = (function(e) {
     "use strict";
     if (e == null || (typeof navigator !== "undefined" && /MSIE [1-9]\./.test(navigator.userAgent))) {
       return null;
     }
     var t = e.document,
-      n = function () {
+      n = function() {
         return e.URL || e.webkitURL || e;
       },
       r = t.createElementNS("http://www.w3.org/1999/xhtml", "a"),
       o = "download" in r,
-      a = function (e) {
+      a = function(e) {
         var t = new MouseEvent("click");
         e.dispatchEvent(t);
       },
       i = /constructor/i.test(e.HTMLElement) || e.safari,
       f = /CriOS\/[\d]+/.test(navigator.userAgent),
-      u = function (t) {
-        (e.setImmediate || e.setTimeout)(function () {
+      u = function(t) {
+        (e.setImmediate || e.setTimeout)(function() {
           throw t;
         }, 0);
       },
       s = "application/octet-stream",
       d = 1e3 * 40,
-      c = function (e) {
-        var t = function () {
+      c = function(e) {
+        var t = function() {
           if (typeof e === "string") {
             n().revokeObjectURL(e);
           } else {
@@ -186,7 +215,7 @@ export const saveAs = (blob, filename) => {
         };
         setTimeout(t, d);
       },
-      l = function (e, t, n) {
+      l = function(e, t, n) {
         t = [].concat(t);
         var r = t.length;
         while (r--) {
@@ -200,13 +229,13 @@ export const saveAs = (blob, filename) => {
           }
         }
       },
-      p = function (e) {
+      p = function(e) {
         if (/^\s*(?:text\/\S*|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(e.type)) {
           return new Blob([String.fromCharCode(65279), e], { type: e.type });
         }
         return e;
       },
-      v = function (t, u, d) {
+      v = function(t, u, d) {
         if (!d) {
           t = p(t);
         }
@@ -214,13 +243,13 @@ export const saveAs = (blob, filename) => {
           w = t.type,
           m = w === s,
           y,
-          h = function () {
+          h = function() {
             l(v, "writestart progress write writeend".split(" "));
           },
-          S = function () {
+          S = function() {
             if ((f || (m && i)) && e.FileReader) {
               var r = new FileReader();
-              r.onloadend = function () {
+              r.onloadend = function() {
                 var t2 = f ? r.result : r.result.replace(/^data:[^;]*;/, "data:attachment/file;");
                 var n = e.open(t2, "_blank");
                 if (!n) e.location.href = t2;
@@ -249,7 +278,7 @@ export const saveAs = (blob, filename) => {
         v.readyState = v.INIT;
         if (o) {
           y = n().createObjectURL(t);
-          setTimeout(function () {
+          setTimeout(function() {
             r.href = y;
             r.download = u;
             a(r);
@@ -262,11 +291,11 @@ export const saveAs = (blob, filename) => {
         S();
       },
       w = v.prototype,
-      m = function (e, t, n) {
+      m = function(e, t, n) {
         return new v(e, t || e.name || "download", n);
       };
     if (typeof navigator !== "undefined" && navigator.msSaveOrOpenBlob) {
-      return function (e, t, n) {
+      return function(e, t, n) {
         t = t || e.name || "download";
         if (!n) {
           e = p(e);
@@ -274,7 +303,7 @@ export const saveAs = (blob, filename) => {
         return navigator.msSaveOrOpenBlob(e, t);
       };
     }
-    w.abort = function () {};
+    w.abort = function() {};
     w.readyState = w.INIT = 0;
     w.WRITING = 1;
     w.DONE = 2;

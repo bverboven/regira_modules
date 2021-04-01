@@ -26,7 +26,10 @@ class TreeNode {
     this._tree.push(node);
     return node;
   }
-  
+  update(value) {
+    this._value = value;
+  }
+
   getOffspring() {
     return this._tree.getOffspring(this);
   }
