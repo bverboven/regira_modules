@@ -5,16 +5,16 @@ import { isArray } from "./array-utility";
 export const contentTypes = {
   jpg: "image/jpeg",
   png: "image/png",
-  gif: "image/gif"
+  gif: "image/gif",
 };
 const DEFAULT_CONTENTTYPE = contentTypes.jpg;
 
-export const getImageContentType = async img => {
+export const getImageContentType = async (img) => {
   // https://stackoverflow.com/questions/18299806/how-to-check-file-mime-type-with-javascript-before-upload#answer-29672957
   const blob = await imageToBlob(img);
   const fileReader = new FileReader();
-  return new Promise(resolve => {
-    fileReader.onloadend = e => {
+  return new Promise((resolve) => {
+    fileReader.onloadend = (e) => {
       const arr = new Uint8Array(e.target.result).subarray(0, 4);
       let header = "";
       for (var i = 0; i < arr.length; i++) {
@@ -44,8 +44,7 @@ export const getImageContentType = async img => {
     fileReader.readAsArrayBuffer(blob);
   });
 };
-export const parseContentType = type =>
-  (type || contentTypes.jpg).replace("/jpg", "/jpeg");
+export const parseContentType = (type) => (type || contentTypes.jpg).replace("/jpg", "/jpeg");
 
 export const createCanvas = (width, height) => {
   const canvas = window.document.createElement("canvas");
@@ -75,19 +74,20 @@ export const get2dContext = (canvas, options) => {
   }
   return ctx;
 };
-export const clearCanvas = canvas => {
+export const clearCanvas = (canvas) => {
   const ctx = get2dContext(canvas);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 };
 
-export const urlToImage = async url => {
-  return new Promise(resolve => {
+export const urlToImage = async (url) => {
+  return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
+    img.onerror = reject;
     img.src = url;
   });
 };
-export const blobToImage = async blob => urlToImage(fileUtility.createUrl(blob));
+export const blobToImage = async (blob) => urlToImage(fileUtility.createUrl(blob));
 export const imageToBlob = async (img, filename, type) => {
   const contentType = parseContentType(type);
   return fileUtility.urlToBlob(img.src, filename, contentType);
@@ -100,9 +100,9 @@ export const imageToCanvas = (img, width, height) => {
   return canvas;
 };
 export const canvasToBlob = async (canvas, type = DEFAULT_CONTENTTYPE, quality = 1) => {
-  return new Promise(resolve => canvas.toBlob(resolve, type, quality));
+  return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 };
-export const base64ToImage = async data => urlToImage(data);
+export const base64ToImage = async (data) => urlToImage(data);
 export const imageToBase64 = (img, type = DEFAULT_CONTENTTYPE, quality = 1) => {
   const canvas = imageToCanvas(img);
   return canvas.toDataURL(type, quality);
@@ -238,17 +238,13 @@ var sA = 0;  //source alpha  */
     // create result canvas
     var resultCanvas = createCanvas(tw, th);
     var resultContext = get2dContext(resultCanvas, {
-      "background-color": type === contentTypes.jpg ? "#FFF" : null
+      "background-color": type === contentTypes.jpg ? "#FFF" : null,
     });
     var imgRes = resultContext.getImageData(0, 0, tw, th);
     var tByteBuffer = imgRes.data;
     // convert float32 array into a UInt8Clamped Array
     var pxIndex = 0; //
-    for (
-      sIndex = 0, tIndex = 0;
-      pxIndex < tw * th;
-      sIndex += 3, tIndex += 4, pxIndex++
-    ) {
+    for (sIndex = 0, tIndex = 0; pxIndex < tw * th; sIndex += 3, tIndex += 4, pxIndex++) {
       tByteBuffer[tIndex] = Math.ceil(tBuffer[sIndex]);
       tByteBuffer[tIndex + 1] = Math.ceil(tBuffer[sIndex + 1]);
       tByteBuffer[tIndex + 2] = Math.ceil(tBuffer[sIndex + 2]);
@@ -263,24 +259,20 @@ var sA = 0;  //source alpha  */
   function downScaleImage(img, scale, type) {
     const canvas = createCanvas(img.width, img.height);
     const context = get2dContext(canvas, {
-      "background-color": type === contentTypes.jpg ? "#FFF" : null
+      "background-color": type === contentTypes.png ? "transparent" : type === contentTypes.jpg ? "#FFF" : null,
     });
     context.drawImage(img, 0, 0);
     return downScaleCanvas(canvas, scale, type);
   }
 
-  const contentType = parseContentType(
-    type || (await getImageContentType(img))
-  );
+  const contentType = parseContentType(type || (await getImageContentType(img)));
 
   const downScaledCanvas = downScaleImage(img, scale, contentType);
   return canvasToImage(downScaledCanvas, contentType, quality);
 };
 export const resize = async (img, maxSize, { quality = 1, type = DEFAULT_CONTENTTYPE } = {}) => {
   const { width: sourceWidth, height: sourceHeight } = img;
-  let [targetWidth = 0, targetHeight = targetWidth] = isArray(maxSize)
-    ? maxSize
-    : [maxSize, maxSize];
+  let [targetWidth = 0, targetHeight = targetWidth] = isArray(maxSize) ? maxSize : [maxSize, maxSize];
 
   if (targetWidth == 0) {
     // adjusted width, relative to height
@@ -294,43 +286,22 @@ export const resize = async (img, maxSize, { quality = 1, type = DEFAULT_CONTENT
   // https://stackoverflow.com/questions/19262141/resize-image-with-javascript-canvas-smoothly#answer-19262385
   const targetCanvas = createCanvas(targetWidth, targetHeight);
   const targetCtx = get2dContext(targetCanvas, {
-    imageSmoothingEnabled: false
+    imageSmoothingEnabled: false,
   });
 
   const factor = 0.5;
 
   // step 1 - resize to 50%
-  const helperCanvas = createCanvas(
-    sourceWidth * factor,
-    sourceHeight * factor
-  );
+  const helperCanvas = createCanvas(sourceWidth * factor, sourceHeight * factor);
   const helperCtx = get2dContext(helperCanvas, {
-    imageSmoothingEnabled: false
+    imageSmoothingEnabled: false,
   });
   // step 2
-  helperCtx.drawImage(
-    helperCanvas,
-    0,
-    0,
-    sourceWidth * factor,
-    sourceHeight * factor
-  );
+  helperCtx.drawImage(helperCanvas, 0, 0, sourceWidth * factor, sourceHeight * factor);
   // step 3, resize to final size
-  targetCtx.drawImage(
-    helperCanvas,
-    0,
-    0,
-    sourceWidth * factor,
-    sourceHeight * factor,
-    0,
-    0,
-    targetWidth,
-    targetHeight
-  );
+  targetCtx.drawImage(helperCanvas, 0, 0, sourceWidth * factor, sourceHeight * factor, 0, 0, targetWidth, targetHeight);
 
-  const contentType = parseContentType(
-    type || (await getImageContentType(img))
-  );
+  const contentType = parseContentType(type || (await getImageContentType(img)));
 
   return canvasToImage(targetCanvas, contentType || contentTypes.png, quality);
 };
@@ -348,54 +319,39 @@ export const rotate = async (img, direction = 1, type = DEFAULT_CONTENTTYPE) => 
   const newWidth = degrees !== 0 ? originalHeight : originalWidth;
   const newHeight = degrees !== 0 ? originalWidth : originalHeight;
 
-  const contentType = parseContentType(
-    type || (await getImageContentType(img))
-  );
+  const contentType = parseContentType(type || (await getImageContentType(img)));
 
   //rotate img on canvas
   const canvas = createCanvas(maxDimension, maxDimension);
   const ctx = get2dContext(canvas, {
     imageSmoothingEnabled: false, //keep quality!
-    "background-color": contentType === contentTypes.jpg ? "#FFF" : null
+    "background-color": contentType === contentTypes.jpg ? "#FFF" : null,
   });
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((degrees * Math.PI) / 180);
   ctx.translate(-(canvas.width / 2), -(canvas.height / 2));
-  ctx.drawImage(
-    img,
-    (canvas.width - originalWidth) / 2,
-    (canvas.height - originalHeight) / 2
-  );
+  ctx.drawImage(img, (canvas.width - originalWidth) / 2, (canvas.height - originalHeight) / 2);
   //extract rotated image from canvas
-  const imgData = ctx.getImageData(
-    (maxDimension - newWidth) / 2,
-    (maxDimension - newHeight) / 2,
-    newWidth,
-    newHeight
-  );
+  const imgData = ctx.getImageData((maxDimension - newWidth) / 2, (maxDimension - newHeight) / 2, newWidth, newHeight);
 
   //paint rotated image on new canvas with correct dimensions
   const canvas2 = createCanvas(newWidth, newHeight);
   const ctx2 = get2dContext(canvas2, {
     imageSmoothingEnabled: false, //keep quality!
-    "background-color": contentType === contentTypes.jpg ? "#FFF" : null
+    "background-color": contentType === contentTypes.jpg ? "#FFF" : null,
   });
   ctx2.putImageData(imgData, 0, 0);
 
   return canvasToImage(canvas2, contentType, 1);
 };
-export const flip = async (img, type = DEFAULT_CONTENTTYPE) =>
-  flipFlop(img, true, false, type);
-export const flop = async (img, type = DEFAULT_CONTENTTYPE) =>
-  flipFlop(img, false, true, type);
+export const flip = async (img, type = DEFAULT_CONTENTTYPE) => flipFlop(img, true, false, type);
+export const flop = async (img, type = DEFAULT_CONTENTTYPE) => flipFlop(img, false, true, type);
 export const flipFlop = async (img, flip, flop, type = DEFAULT_CONTENTTYPE) => {
-  const contentType = parseContentType(
-    type || (await getImageContentType(img))
-  );
+  const contentType = parseContentType(type || (await getImageContentType(img)));
 
   const canvas = imageToCanvas(img);
   const ctx = get2dContext(canvas, {
-    "background-color": contentType === contentTypes.jpg ? "#FFF" : null
+    "background-color": contentType === contentTypes.jpg ? "#FFF" : null,
   });
   ctx.translate(flip ? img.width : 0, flop ? img.height : 0);
   ctx.scale(flip ? -1 : 1, flop ? -1 : 1);
@@ -408,7 +364,7 @@ export const flipFlop = async (img, flip, flop, type = DEFAULT_CONTENTTYPE) => {
 export const convertType = async (img, targetType) => {
   const canvas = createCanvas(img.width, img.height);
   const ctx = get2dContext(canvas, {
-    "background-color": targetType === contentTypes.jpg ? "#FFF" : null
+    "background-color": targetType === contentTypes.jpg ? "#FFF" : null,
   });
   ctx.drawImage(img, 0, 0);
   return canvasToImage(canvas, targetType, 1);
@@ -420,7 +376,7 @@ export const getRgbColor = (canvas, pos) => {
   const [r, g, b] = ctx.getImageData(x, y, 1, 1).data;
   return { r, g, b };
 };
-export const getLightness = img => {
+export const getLightness = (img) => {
   let colorSum = 0;
   const canvas = imageToCanvas(img);
   const ctx = get2dContext(canvas);
@@ -452,11 +408,7 @@ export const white2transparent = async (img, tolerance) => {
     b = 2,
     a = 3;
   for (let p = 0; p < pixel.length; p += 4) {
-    if (
-      pixel[p + r] >= 255 - tolerance &&
-      pixel[p + g] >= 255 - tolerance &&
-      pixel[p + b] >= 255 - tolerance
-    ) {
+    if (pixel[p + r] >= 255 - tolerance && pixel[p + g] >= 255 - tolerance && pixel[p + b] >= 255 - tolerance) {
       // if white then change alpha to 0
       pixel[p + a] = 0;
     }
@@ -492,5 +444,5 @@ export default {
   convertType,
 
   getLightness,
-  white2transparent
+  white2transparent,
 };

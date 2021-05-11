@@ -80,6 +80,9 @@ export const getExtension = (filename) => {
 };
 export const getFilenameWithoutExtension = (uri) => {
   const filename = getFilename(uri);
+  if (!filename.includes(".")) {
+    return filename;
+  }
   const filenameSegments = filename.split(".");
   return take(filenameSegments, filenameSegments.length - 1 || 1).join(".");
 };
