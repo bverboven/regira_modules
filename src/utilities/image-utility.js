@@ -46,19 +46,28 @@ export const getImageContentType = async (img) => {
 };
 export const parseContentType = (type) => (type || contentTypes.jpg).replace("/jpg", "/jpeg");
 
-export const createCanvas = (width, height) => {
+export const createCanvas = (width, height, options = { backgroundColor: "#ffffff", imageSmoothingEnabled: false }) => {
   const canvas = window.document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
+  if (options) {
+    get2dContext(canvas, options);
+  }
   return canvas;
+};
+export const centerImageOnCanvas = (img) => {
+  const maxSize = Math.max(img.width, img.height);
+  const canvas = createCanvas(maxSize, maxSize);
+  return addImageToCanvas(canvas, img, { top: (maxSize - img.height) / 2, left: (maxSize - img.width) / 2 });
 };
 export const get2dContext = (canvas, options) => {
   const ctx = canvas.getContext("2d");
   if (typeof options !== "undefined") {
-    Object.keys(options).forEach(function (x) {
+    Object.keys(options).forEach(function(x) {
       const option = options[x];
       if (option !== null) {
         switch (x) {
+          case "backgroundColor":
           case "background-color":
             ctx.fillStyle = getRgbString(option);
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -77,6 +86,12 @@ export const get2dContext = (canvas, options) => {
 export const clearCanvas = (canvas) => {
   const ctx = get2dContext(canvas);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
+export const addImageToCanvas = (canvas, img, { top = 0, left = 0 } = { top: 0, left: 0 }) => {
+  canvas = canvas || createCanvas(img.width + left, img.height + top);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, left, top, img.width, img.height);
+  return canvas;
 };
 
 export const urlToImage = async (url) => {
