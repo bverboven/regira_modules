@@ -79,6 +79,10 @@ export const getExtension = (filename) => {
   return ext ? "." + ext : "";
 };
 export const getFilenameWithoutExtension = (uri) => {
+  if (!uri) {
+    return null;
+  }
+  
   const filename = getFilename(uri);
   if (!filename.includes(".")) {
     return filename;

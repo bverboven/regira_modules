@@ -10,33 +10,36 @@ import objectUtility from "./object-utility";
 import promiseUtility from "./promise-utility";
 import stringUtility from "./string-utility";
 //import webpackUtility from "./webpack-utility";
+import clipboardUtility from "./clipboard-utility";
 
 export {
-    arrayUtility,
-    colorUtility,
-    datetimeUtility,
-    fileUtility,
-    htmlUtility,
-    httpUtility,
-    imageUtility,
-    numberUtility,
-    objectUtility,
-    promiseUtility,
-    stringUtility,
-    //webpackUtility
+  arrayUtility,
+  colorUtility,
+  datetimeUtility,
+  fileUtility,
+  htmlUtility,
+  httpUtility,
+  imageUtility,
+  numberUtility,
+  objectUtility,
+  promiseUtility,
+  stringUtility,
+  //webpackUtility,
+  clipboardUtility,
 };
 
 export default {
-    arrayUtility,
-    colorUtility,
-    datetimeUtility,
-    fileUtility,
-    htmlUtility,
-    httpUtility,
-    imageUtility,
-    numberUtility,
-    objectUtility,
-    promiseUtility,
-    stringUtility,
-    //webpackUtility
+  arrayUtility,
+  colorUtility,
+  datetimeUtility,
+  fileUtility,
+  htmlUtility,
+  httpUtility,
+  imageUtility,
+  numberUtility,
+  objectUtility,
+  promiseUtility,
+  stringUtility,
+  //webpackUtility,
+  clipboardUtility,
 };
